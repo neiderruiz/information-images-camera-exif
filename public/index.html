@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>images upload</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <link rel="stylesheet" href="leaflet/dist/leaflet.css">
+    <style>
+        #map {
+            height: 50vh;
+        }
+        #showImage{
+            width: 700px;
+        }
+    </style>
+</head>
+<body>
+
+    
+    <div class="container">
+            <h1>Extrac data photos camera</h1>
+            <div class="row">
+                <div class="col-md-12">
+                    <form id="formualry"  enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label for="">Upload image</label>
+                        <input type="file" name="image" class="form-control">
+                    </div>
+                    <div id="showImages" >
+
+                    </div>
+                    <div id="makeAndModel"></div>
+                    <div class="form-group d-flex mt-5">
+                        <button class="btn btn-primary mx-auto">Upload Image</button>
+                    </div>
+                </form>
+            </div>
+            <div id="map" class="w-100">
+
+            </div>
+        </div>
+        <script src="exif-js/exif.js"></script>
+        <script src="leaflet/dist/leaflet.js"></script>
+        <script>
+            let i =[];
+            const L = window.L;
+            const showImages = document.getElementById('showImages');
+            var map = L.map('map').setView([5.0108375,-75.3542003], 5);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    maxZoom: 10
+}).addTo(map);
+            document.getElementById('formualry').addEventListener('submit', function(e){
+                e.preventDefault();
+                i.push(document.getElementById('formualry').image.files[0]);
+                const image = document.querySelector('input[type="file"]').files[0];
+                const im = URL.createObjectURL(image);
+                i.push(im);
+                showImages.innerHTML += `<img src="${im}" height="300" alt="image"/>`;  
+        
+                EXIF.getData(image, function() {
+                    console.log(EXIF.getAllTags(this));
+                    var make = EXIF.getTag(this, "Make");
+                    var model = EXIF.getTag(this, "Model");
+                    var GPSLongitude = EXIF.getTag(this, "GPSLongitude");
+                    var GPSLatitude = EXIF.getTag(this, "GPSLatitude");
+                    var makeAndModel = document.getElementById("makeAndModel");
+                    makeAndModel.innerHTML = `${make} ${model}`;
+                    const longLatitude =
+      (GPSLatitude[0].numerator / GPSLatitude[0].denominator +
+      GPSLatitude[1].numerator / GPSLatitude[1].denominator / 60 +
+      GPSLatitude[2].numerator / GPSLatitude[2].denominator / 3600).toFixed(8);
+
+      const longLongitude =
+      (GPSLongitude[0].numerator / GPSLongitude[0].denominator +
+      GPSLongitude[1].numerator / GPSLongitude[1].denominator / 60 +
+      GPSLongitude[2].numerator / GPSLongitude[2].denominator / 3600).toFixed(8);
+    L.marker([longLatitude, -longLongitude])
+        .addTo(map)
+        .bindPopup(`${make} ${model}`);
+        map.setView([longLatitude, -longLongitude], 13);
+                console.log(GPSLongitude, GPSLatitude, longLatitude, longLongitude);
+                });
+            });
+
+        </script>
+</body>
+</html>
